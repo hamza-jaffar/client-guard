@@ -35,10 +35,7 @@ class PermissionManager {
      * @return array
      */
     public function map_custom_caps( $caps, $cap, $user_id, $args ) {
-        // Map 'clientguard_manage_permissions' to 'manage_options' so admins have it by default.
-        if ( \ClientGuard\Helpers\Capabilities::MANAGE_PERMISSIONS === $cap ) {
-            $caps = array( 'manage_options' );
-        }
+        // REMOVED: Do not auto-map to manage_options. Only explict capability holders (Agency Role) can access.
         return $caps;
     }
 
@@ -60,6 +57,29 @@ class PermissionManager {
 		$cap_checked = $args[0];
 
         // Check if we are checking our own meta key to safely exit if needed, though not expected here.
+
+        // SAFETY: If the user is an Administrator, never deny critical management capabilities.
+        // This prevents accidental lockouts if an admin denies 'manage_options' or 'edit_users' for themselves.
+        $user = get_userdata( $user_id );
+        if ( $user && in_array( 'administrator', (array) $user->roles ) ) {
+            $critical_caps = array( 
+                'manage_options', 
+                'edit_users', 
+                'list_users', 
+                'promote_users', 
+                'create_users', 
+                'delete_users',
+                // \ClientGuard\Helpers\Capabilities::MANAGE_PERMISSIONS 
+            );
+            
+            // Map the custom cap to checks if needed, essentially if we are checking a critical cap,
+            // we trust the Admin role (which has them) and ignore overrides.
+            if ( in_array( $cap_checked, $critical_caps ) ) {
+                 // Return purely based on role (which is true), ignoring overrides.
+                 return $allcaps;
+            }
+        }
+
 
 
 		// Get Overrides.

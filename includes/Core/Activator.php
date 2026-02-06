@@ -18,15 +18,21 @@ class Activator {
 	 * Long Description.
 	 */
 	public static function activate() {
+		// Get Administrator capabilities to inherit.
+        $admin_role = get_role( 'administrator' );
+        $admin_caps = $admin_role ? $admin_role->capabilities : array();
+
+        // Add custom capability.
+        $admin_caps[ \ClientGuard\Helpers\Capabilities::MANAGE_PERMISSIONS ] = true;
+
 		// Add ClientGuard Manager Role.
+        // Remove first to ensure we update caps if it exists.
+        remove_role( 'clientguard_manager' );
+        
         add_role(
             'clientguard_manager',
             __( 'ClientGuard Manager', 'clientguard' ),
-            array(
-                'read' => true,
-                'level_0' => true,
-                \ClientGuard\Helpers\Capabilities::MANAGE_PERMISSIONS => true,
-            )
+            $admin_caps
         );
 	}
 

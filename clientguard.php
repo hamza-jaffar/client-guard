@@ -7,17 +7,17 @@
  * the plugin, registers the activation and deactivation functions, and defines
  * a function that starts the plugin.
  *
- * @link              https://example.com
+ * @link              https://degvora.com
  * @since             1.0.0
  * @package           ClientGuard
  *
  * @wordpress-plugin
  * Plugin Name:       ClientGuard
- * Plugin URI:        https://example.com/plugin-name-uri/
+ * Plugin URI:        https://degvora.com/
  * Description:       Protect WordPress sites from client mistakes by controlling what non-admin users can see and do.
  * Version:           1.0.0
  * Author:            ClientGuard Team
- * Author URI:        https://example.com/
+ * Author URI:        https://degvora.com/
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       clientguard
