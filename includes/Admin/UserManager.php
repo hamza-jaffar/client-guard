@@ -64,4 +64,39 @@ class UserManager {
         $overrides = get_user_meta( $user_id, PermissionManager::CAP_META_KEY, true );
         return is_array( $overrides ) ? $overrides : array();
     }
+
+    /**
+     * Trust an admin user.
+     *
+     * @param int $user_id User ID.
+     */
+    public static function trust_user( $user_id ) {
+        if ( ! Capabilities::current_user_can_manage() ) { return; }
+        
+        $trusted = get_option( 'clientguard_trusted_admins', array() );
+        if ( ! in_array( $user_id, $trusted ) ) {
+            $trusted[] = $user_id;
+            update_option( 'clientguard_trusted_admins', $trusted );
+        }
+    }
+
+    /**
+     * Untrust an admin user.
+     *
+     * @param int $user_id User ID.
+     */
+    public static function untrust_user( $user_id ) {
+        if ( ! Capabilities::current_user_can_manage() ) { return; }
+
+        if ( get_current_user_id() === $user_id ) {
+            return; // Cannot untrust yourself.
+        }
+
+        $trusted = get_option( 'clientguard_trusted_admins', array() );
+        $key = array_search( $user_id, $trusted );
+        if ( false !== $key ) {
+            unset( $trusted[$key] );
+            update_option( 'clientguard_trusted_admins', array_values( $trusted ) );
+        }
+    }
 }

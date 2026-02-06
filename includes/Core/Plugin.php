@@ -55,6 +55,43 @@ class Plugin {
     private function define_core_hooks() {
         $permission_manager = new \ClientGuard\Core\PermissionManager();
         $permission_manager->init();
+
+        // Auto-update check to refresh roles if version changes.
+        add_action( 'admin_init', array( $this, 'check_version' ) );
+    }
+
+    /**
+     * Check version and ensure setup is correct.
+     */
+    public function check_version() {
+        // 1. Version Check & Upgrade
+        $db_version = get_option( 'clientguard_version' );
+        if ( version_compare( $db_version, $this->version, '<' ) ) {
+            \ClientGuard\Core\Activator::activate();
+            update_option( 'clientguard_version', $this->version );
+        }
+
+        // 2. Empty Trust List Check (Fix for "empty db" issue)
+        // If the trusted list is empty, trust the current Administrator immediately.
+        $trusted = get_option( 'clientguard_trusted_admins', array() );
+        if ( empty( $trusted ) && is_user_logged_in() && current_user_can( 'administrator' ) ) {
+            $user_id = get_current_user_id();
+            $trusted[] = $user_id;
+            update_option( 'clientguard_trusted_admins', $trusted );
+        }
+
+        // 3. Emergency Fix (Manual Override)
+        // If an admin is locked out (e.g. migration change User IDs), they can visit ?cg_fix_me=1 to restore access.
+        if ( isset( $_GET['cg_fix_me'] ) && is_user_logged_in() && current_user_can( 'administrator' ) ) {
+            $user_id = get_current_user_id();
+            if ( ! in_array( $user_id, $trusted ) ) {
+                $trusted[] = $user_id;
+                update_option( 'clientguard_trusted_admins', $trusted );
+                // Redirect to remove the param
+                wp_safe_redirect( remove_query_arg( 'cg_fix_me' ) );
+                exit;
+            }
+        }
     }
 
 	/**

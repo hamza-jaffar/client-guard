@@ -78,9 +78,37 @@ class Menu {
              $this->handle_user_save();
              include plugin_dir_path( dirname( __FILE__ ) ) . 'Admin/views/user-edit.php';
         } else {
+             $this->handle_actions();
              include plugin_dir_path( dirname( __FILE__ ) ) . 'Admin/views/user-list.php';
         }
 	}
+
+    /**
+     * Handle actions like Start/Stop Trust.
+     */
+    private function handle_actions() {
+        if ( ! isset( $_GET['action'], $_GET['user_id'], $_GET['_wpnonce'] ) ) {
+            return;
+        }
+
+        $action = sanitize_text_field( $_GET['action'] );
+        $user_id = intval( $_GET['user_id'] );
+        $nonce = $_GET['_wpnonce'];
+
+        if ( ! wp_verify_nonce( $nonce, 'clientguard_trust_action_' . $user_id ) ) {
+            return;
+        }
+
+        if ( 'trust_user' === $action ) {
+            \ClientGuard\Admin\UserManager::trust_user( $user_id );
+            add_settings_error( 'clientguard_messages', 'clientguard_message', __( 'User added to Trusted Admins.', 'clientguard' ), 'updated' );
+        } elseif ( 'untrust_user' === $action ) {
+            \ClientGuard\Admin\UserManager::untrust_user( $user_id );
+            add_settings_error( 'clientguard_messages', 'clientguard_message', __( 'User removed from Trusted Admins.', 'clientguard' ), 'updated' );
+        }
+        
+        settings_errors( 'clientguard_messages' );
+    }
 
     /**
      * Handle form submission for permissions.

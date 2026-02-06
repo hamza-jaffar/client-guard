@@ -32,7 +32,7 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Currently plugin version.
  */
-define( 'CLIENTGUARD_VERSION', '1.0.0' );
+define( 'CLIENTGUARD_VERSION', '1.0.1' );
 
 /**
  * The code that runs during plugin activation.

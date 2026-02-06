@@ -32,6 +32,21 @@ class Capabilities {
 	 * @return bool
 	 */
 	public static function current_user_can_manage() {
-		return current_user_can( self::get_manage_capability() );
+        if ( ! current_user_can('administrator') ) {
+            return false;
+        }
+
+        $user_id = get_current_user_id();
+        $trusted = get_option('clientguard_trusted_admins');
+		
+        if ( empty( $trusted ) ) {
+            return true;
+        }
+
+        if ( ! is_array( $trusted ) || ! in_array( $user_id, $trusted ) ) {
+            return false;
+        }
+
+		return true;
 	}
 }

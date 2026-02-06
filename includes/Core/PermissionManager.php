@@ -58,10 +58,36 @@ class PermissionManager {
 
         // Check if we are checking our own meta key to safely exit if needed, though not expected here.
 
-        // SAFETY: If the user is an Administrator, never deny critical management capabilities.
-        // This prevents accidental lockouts if an admin denies 'manage_options' or 'edit_users' for themselves.
-        $user = get_userdata( $user_id );
-        if ( $user && in_array( 'administrator', (array) $user->roles ) ) {
+        // SAFETY: Only TRUSTED Administrators are exempt from critical capability blocks.
+        // This prevents untrusted admins from bypassing restrictions if we later decide to restrict them.
+		$user = get_userdata( $user_id );
+        
+        // GRANT ACCESS: If we are checking for the plugin management capability,
+        // we must dynamically grant it to "Trusted Admins" (since they don't have it in their role anymore).
+        if ( \ClientGuard\Helpers\Capabilities::MANAGE_PERMISSIONS === $cap_checked ) {
+             // Replicate the Trusted Admin Check Logic here to avoid recursion loop or external dependency issues
+             $trusted = get_option( 'clientguard_trusted_admins', array() );
+             $is_trusted = is_array( $trusted ) && in_array( $user_id, $trusted );
+             $is_admin = $user && in_array( 'administrator', (array) $user->roles );
+             
+             // FAIL-SAFE: If list is empty, allow all admins (matches Capabilities::current_user_can_manage logic)
+             if ( empty( $trusted ) && $is_admin ) {
+                 $allcaps[ $cap_checked ] = true;
+                 return $allcaps;
+             }
+
+             if ( $is_admin && $is_trusted ) {
+                 $allcaps[ $cap_checked ] = true;
+                 return $allcaps;
+             }
+        }
+
+        // SAFETY: Only TRUSTED Administrators are exempt from critical capability blocks.
+        $trusted = get_option( 'clientguard_trusted_admins', array() );
+        $is_trusted = is_array( $trusted ) && in_array( $user_id, $trusted );
+        $is_admin = $user && in_array( 'administrator', (array) $user->roles );
+
+        if ( $is_admin && $is_trusted ) {
             $critical_caps = array( 
                 'manage_options', 
                 'edit_users', 
@@ -69,7 +95,7 @@ class PermissionManager {
                 'promote_users', 
                 'create_users', 
                 'delete_users',
-                // \ClientGuard\Helpers\Capabilities::MANAGE_PERMISSIONS 
+                // \ClientGuard\Helpers\Capabilities::MANAGE_PERMISSIONS // Managed via helper now
             );
             
             // Map the custom cap to checks if needed, essentially if we are checking a critical cap,
