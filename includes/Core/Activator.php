@@ -18,7 +18,16 @@ class Activator {
 	 * Long Description.
 	 */
 	public static function activate() {
-        // Implementation for activation (e.g. creating DB tables if needed, or setting default options)
+		// Add ClientGuard Manager Role.
+        add_role(
+            'clientguard_manager',
+            __( 'ClientGuard Manager', 'clientguard' ),
+            array(
+                'read' => true,
+                'level_0' => true,
+                \ClientGuard\Helpers\Capabilities::MANAGE_PERMISSIONS => true,
+            )
+        );
 	}
 
 }

@@ -18,7 +18,7 @@ class Deactivator {
 	 * Long Description.
 	 */
 	public static function deactivate() {
-        // Implementation for deactivation
+		remove_role( 'clientguard_manager' );
 	}
 
 }
